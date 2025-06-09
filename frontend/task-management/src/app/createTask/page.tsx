@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,13 +23,41 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-import '@/styles/auth.css'
+import '@/styles/auth.css';
+
+import { useCreateTaskFormStore } from '@/store/createTaskStore';
+
 
 const CreateTask: React.FC = () => {
-    const [taskTitle, setTaskTitle] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [taskDescription, setTaskDescription] = useState('');
-    const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+    const {
+        taskTitle,
+        selectedCategory,
+        taskDescription,
+        dueDate,
+        isLoading,
+        error,
+        setTaskTitle,
+        setSelectedCategory,
+        setTaskDescription,
+        setDueDate,
+        submitTask,
+        setError,
+    } = useCreateTaskFormStore(
+        (state) => ({
+            taskTitle: state.taskTitle,
+            selectedCategory: state.selectedCategory,
+            taskDescription: state.taskDescription,
+            dueDate: state.dueDate,
+            isLoading: state.isLoading,
+            error: state.error,
+            setTaskTitle: state.setTaskTitle,
+            setSelectedCategory: state.setSelectedCategory,
+            setTaskDescription: state.setTaskDescription,
+            setDueDate: state.setDueDate,
+            submitTask: state.submitTask,
+            setError: state.setError,
+        })
+    );
 
     const categories = [
         { value: 'work', label: 'Work' },
@@ -39,56 +67,34 @@ const CreateTask: React.FC = () => {
         { value: 'project-x', label: 'Project X' },
     ];
 
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTaskTitle(e.target.value);
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+         setTaskDescription(e.target.value);
+    };
+
+    const handleCategoryChange = (value: string) => {
+        setSelectedCategory(value);
+    }
+
+     const handleDueDateChange = (date: Date | undefined) => {
+        setDueDate(date);
+    }
+
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!taskTitle.trim()) {
-            alert('Please enter a task title.');
-            return;
-        }
-         if (!selectedCategory) {
-            alert('Please select a category.');
-            return;
-        }
-
-        const taskData = {
-            title: taskTitle,
-            category: selectedCategory,
-            description: taskDescription,
-            dueDate: dueDate ? dueDate.toISOString() : null,
-        };
-
-        console.log('Attempting to Create Task:', taskData);
-
-        try {
-            const response = await fetch('/api/tasks', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(taskData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Task creation failed:', errorData);
-                alert(`Failed to create task: ${errorData.message || response.statusText}`);
-                return;
-            }
-
-            const createdTask = await response.json();
-            console.log('Task created successfully:', createdTask);
-
-            setTaskTitle('');
-            setSelectedCategory('');
-            setTaskDescription('');
-            setDueDate(undefined);
-
-        } catch (error) {
-            console.error('Error submitting task:', error);
-            alert('An unexpected error occurred while creating the task.');
-        }
+        setError(null);
+        submitTask();
     };
+
+    const dueDateButtonClasses = cn(
+        "w-full justify-start text-left font-normal",
+        !dueDate && "text-muted-foreground"
+    );
+
 
     return (
         <div className="split-layout-card-section">
@@ -98,6 +104,10 @@ const CreateTask: React.FC = () => {
                     <CardDescription>Enter task details and assign a category</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {error && (
+                        <div className="mb-4 text-sm text-red-500 text-center">{error}</div>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-2">
@@ -108,7 +118,7 @@ const CreateTask: React.FC = () => {
                                     placeholder="e.g., Buy groceries"
                                     required
                                     value={taskTitle}
-                                    onChange={(e) => setTaskTitle(e.target.value)}
+                                    onChange={handleTitleChange}
                                 />
                             </div>
 
@@ -116,7 +126,7 @@ const CreateTask: React.FC = () => {
                                 <Label htmlFor="task-category">Category</Label>
                                 <Select
                                     value={selectedCategory}
-                                    onValueChange={setSelectedCategory}
+                                    onValueChange={handleCategoryChange}
                                     required
                                 >
                                     <SelectTrigger id="task-category">
@@ -138,7 +148,7 @@ const CreateTask: React.FC = () => {
                                     id="task-description"
                                     placeholder="Add details about the task..."
                                     value={taskDescription}
-                                    onChange={(e) => setTaskDescription(e.target.value)}
+                                    onChange={handleDescriptionChange}
                                 />
                             </div>
 
@@ -148,10 +158,8 @@ const CreateTask: React.FC = () => {
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !dueDate && "text-muted-foreground"
-                                            )}
+                                            className={dueDateButtonClasses}
+                                            disabled={isLoading}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
                                             {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
@@ -161,7 +169,7 @@ const CreateTask: React.FC = () => {
                                         <Calendar
                                             mode="single"
                                             selected={dueDate}
-                                            onSelect={setDueDate}
+                                            onSelect={handleDueDateChange}
                                             initialFocus
                                         />
                                     </PopoverContent>
@@ -170,7 +178,13 @@ const CreateTask: React.FC = () => {
 
                         </div>
                          <CardFooter className="flex-col gap-2 p-0 pt-6">
-                            <Button type="submit" className="w-full">Create Task</Button>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Creating...' : 'Create Task'}
+                            </Button>
                         </CardFooter>
                     </form>
                 </CardContent>

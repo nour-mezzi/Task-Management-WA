@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,13 +25,10 @@ import { cn } from "@/lib/utils";
 
 import '@/styles/auth.css';
 
-interface Task {
-    id: string;
-    title: string;
-    category: string;
-    description?: string;
-    dueDate?: Date | string | null;
-}
+import { useEditTaskFormStore } from '@/store/editTaskStore';
+
+import { Task } from '@/types/task';
+
 
 interface EditTaskFormProps {
     initialTaskData: Task;
@@ -46,65 +43,89 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
     onSave,
     onCancel
 }) => {
-    const [taskTitle, setTaskTitle] = useState(initialTaskData.title);
-    const [selectedCategory, setSelectedCategory] = useState(initialTaskData.category);
-    const [taskDescription, setTaskDescription] = useState(initialTaskData.description || '');
-    const [dueDate, setDueDate] = useState<Date | undefined>(
-        initialTaskData.dueDate instanceof Date
-            ? initialTaskData.dueDate
-            : (initialTaskData.dueDate ? new Date(initialTaskData.dueDate) : undefined)
+    const {
+        taskId,
+        taskTitle,
+        selectedCategory,
+        taskDescription,
+        dueDate,
+        isLoading,
+        error,
+        loadTaskForEditing,
+        setTaskTitle,
+        setSelectedCategory,
+        setTaskDescription,
+        setDueDate,
+        resetForm,
+        submitTaskUpdate,
+        setError,
+    } = useEditTaskFormStore(
+        (state) => ({
+            taskId: state.taskId,
+            taskTitle: state.taskTitle,
+            selectedCategory: state.selectedCategory,
+            taskDescription: state.taskDescription,
+            dueDate: state.dueDate,
+            isLoading: state.isLoading,
+            error: state.error,
+            loadTaskForEditing: state.loadTaskForEditing,
+            setTaskTitle: state.setTaskTitle,
+            setSelectedCategory: state.setSelectedCategory,
+            setTaskDescription: state.setTaskDescription,
+            setDueDate: state.setDueDate,
+            resetForm: state.resetForm,
+            submitTaskUpdate: state.submitTaskUpdate,
+            setError: state.setError,
+        })
     );
+
+    useEffect(() => {
+        if (initialTaskData) {
+           console.log("Loading initial task data into Zustand store:", initialTaskData);
+           loadTaskForEditing(initialTaskData);
+        }
+
+        return () => {
+            console.log("Cleaning up EditTaskForm state");
+            resetForm();
+        };
+
+    }, [initialTaskData, loadTaskForEditing, resetForm]);
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTaskTitle(e.target.value);
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+         setTaskDescription(e.target.value);
+    };
+
+    const handleCategoryChange = (value: string) => {
+        setSelectedCategory(value);
+    }
+
+     const handleDueDateChange = (date: Date | undefined) => {
+        setDueDate(date);
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+        submitTaskUpdate(onSave);
+    };
 
-        if (!taskTitle.trim()) {
-            alert('Please enter a task title.');
-            return;
-        }
-         if (!selectedCategory) {
-            alert('Please select a category.');
-            return;
-        }
-
-        const updatedTaskData: Task = {
-            ...initialTaskData,
-            title: taskTitle,
-            category: selectedCategory,
-            description: taskDescription,
-            dueDate: dueDate || null,
-        };
-
-        console.log('Attempting to Update Task:', updatedTaskData);
-
-        try {
-            const response = await fetch(`/api/tasks/${initialTaskData.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedTaskData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Task update failed:', errorData);
-                alert(`Failed to update task: ${errorData.message || response.statusText}`);
-                return;
-            }
-
-            const savedTask = await response.json();
-            console.log('Task updated successfully:', savedTask);
-
-            if (onSave) {
-                onSave(savedTask || updatedTaskData);
-            }
-
-        } catch (error) {
-            console.error('Error submitting task update:', error);
-            alert('An unexpected error occurred while updating the task.');
+    const handleCancelClick = () => {
+        resetForm();
+        if (onCancel) {
+            onCancel();
         }
     };
+
+    const dueDateButtonClasses = cn(
+        "w-full justify-start text-left font-normal",
+        !dueDate && "text-muted-foreground"
+    );
+
 
     return (
         <div className="split-layout-card-section">
@@ -114,86 +135,98 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                     <CardDescription>Modify task details and save changes</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit}>
-                        <div className="flex flex-col gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-task-title">Task Title</Label>
-                                <Input
-                                    id="edit-task-title"
-                                    type="text"
-                                    placeholder="e.g., Buy groceries"
-                                    required
-                                    value={taskTitle}
-                                    onChange={(e) => setTaskTitle(e.target.value)}
-                                />
-                            </div>
+                    {error && (
+                        <div className="mb-4 text-sm text-red-500 text-center">{error}</div>
+                    )}
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-task-category">Category</Label>
-                                <Select
-                                    value={selectedCategory}
-                                    onValueChange={setSelectedCategory}
-                                    required
+                    {taskId ? (
+                         <form onSubmit={handleSubmit}>
+                            <div className="flex flex-col gap-6">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="edit-task-title">Task Title</Label>
+                                    <Input
+                                        id="edit-task-title"
+                                        type="text"
+                                        placeholder="e.g., Buy groceries"
+                                        required
+                                        value={taskTitle}
+                                        onChange={handleTitleChange}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="edit-task-category">Category</Label>
+                                    <Select
+                                        value={selectedCategory}
+                                        onValueChange={handleCategoryChange}
+                                        required
+                                    >
+                                        <SelectTrigger id="edit-task-category">
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categories.map((category) => (
+                                                <SelectItem key={category.value} value={category.value}>
+                                                    {category.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="edit-task-description">Description (Optional)</Label>
+                                    <Textarea
+                                        id="edit-task-description"
+                                        placeholder="Add details about the task..."
+                                        value={taskDescription}
+                                        onChange={handleDescriptionChange}
+                                    />
+                                </div>
+
+                                 <div className="grid gap-2">
+                                    <Label htmlFor="edit-task-due-date">Due Date (Optional)</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={"outline"}
+                                                className={dueDateButtonClasses}
+                                                disabled={isLoading}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0">
+                                            <Calendar
+                                                mode="single"
+                                                selected={dueDate}
+                                                onSelect={handleDueDateChange}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+
+                            </div>
+                             <CardFooter className="flex justify-end gap-2 p-0 pt-6">
+                                {onCancel && (
+                                    <Button type="button" variant="outline" onClick={handleCancelClick} disabled={isLoading}>
+                                        Cancel
+                                    </Button>
+                                )}
+                                <Button
+                                    type="submit"
+                                    disabled={isLoading}
                                 >
-                                    <SelectTrigger id="edit-task-category">
-                                        <SelectValue placeholder="Select a category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map((category) => (
-                                            <SelectItem key={category.value} value={category.value}>
-                                                {category.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="edit-task-description">Description (Optional)</Label>
-                                <Textarea
-                                    id="edit-task-description"
-                                    placeholder="Add details about the task..."
-                                    value={taskDescription}
-                                    onChange={(e) => setTaskDescription(e.target.value)}
-                                />
-                            </div>
-
-                             <div className="grid gap-2">
-                                <Label htmlFor="edit-task-due-date">Due Date (Optional)</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !dueDate && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={dueDate}
-                                            onSelect={setDueDate}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-
-                        </div>
-                         <CardFooter className="flex justify-end gap-2 p-0 pt-6">
-                            {onCancel && (
-                                <Button type="button" variant="outline" onClick={onCancel}>
-                                    Cancel
+                                    {isLoading ? 'Saving...' : 'Save Changes'}
                                 </Button>
-                            )}
-                            <Button type="submit">Save Changes</Button>
-                        </CardFooter>
-                    </form>
+                            </CardFooter>
+                        </form>
+                    ) : (
+                        <p className="p-4 text-center text-gray-500">Loading task data...</p>
+                    )}
+
                 </CardContent>
             </Card>
         </div>
