@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:15-alpine
+    container_name: task_db
+    restart: always
+
+    ports:
+      - "5433:5432"
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    # Persist data
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+# Docker Volumes
+volumes:
+  db_data:
