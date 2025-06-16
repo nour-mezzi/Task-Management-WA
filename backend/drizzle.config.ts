@@ -1,12 +1,12 @@
 // /home/user/Task-Management-WA/backend/drizzle.config.ts
 import 'dotenv/config';
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from 'drizzle-orm/define-config';
 
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle',
-  driver: 'pg', // TypeScript error TS2322 here?
-  dbCredentials: { // TypeScript error TS2353 here?
+  driver: 'pg', 
+  dbCredentials: { 
     host: process.env.DB_HOST!,
     port: parseInt(process.env.DB_PORT!, 10),
     user: process.env.DB_USER!,

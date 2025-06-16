@@ -1,46 +1,36 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
-    "target": "es2017",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library definitions. */
-    "lib": ["es2017"],                                   /* Specify a set of bundled library declaration files that accompany the JavaScript code. */
-    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
-    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is consistent throughout a file system. */
+    "target": "es2017",
+    "lib": ["es2017"],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
 
-    /* Modules */
-    "module": "commonjs",                                /* Specify what module code is generated. */
-    "moduleResolution": "node",                          /* Specify how TypeScript looks up a module from a given module specifier. */
-    // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
-    // "paths": {                                        /* Specify a set of entries that re-map imports to lookup locations relative to the 'baseUrl'. */
-    //   "@/*": ["./src/*"]
-    // },
-
-    /* Type Checking */
-    "strict": true,                                      /* Enable all strict type-checking options. */
-    "noImplicitAny": true,                               /* Enable error reporting for expressions and declarations with an implied 'any' type. */
-    "strictNullChecks": true,                            /* When enabled, null and undefined are not assignable to anything else, unless strict null checks are explicitly disabled. */
-    "strictFunctionTypes": true,                         /* Enable error reporting for inconsistencies in the way function types are compared. */
-    "strictBindCallApply": true,                         /* Check that the arguments for 'bind', 'call', and 'apply' methods match the original function. */
-    "strictPropertyInitialization": true,                /* Check for class properties that are declared but not set in the constructor. */
-    "noImplicitThis": true,                              /* Enable error reporting when 'this' expressions have an implied 'any' type. */
-    "useUnknownInCatchVariables": true,                  /* Type catch clause variables as 'unknown' instead of 'any'. */
-    "alwaysStrict": true,                                /* Ensure 'use strict' is emitted in compiled JavaScript files. */
-
-    /* Emit */
-    "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
-    "sourceMap": true,                                   /* Create source maps for emitted JavaScript files. */
-
-    /* Interop Constraints */
-    "allowSyntheticDefaultImports": true,                /* Allow 'import x from "module"' when module has no default export. This is implied by esModuleInterop. */
-
-    /* Completeness */
-    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+    /* Added: Explicitly tell TypeScript where to look for types */
+    "typeRoots": [
+      "./node_modules/@types"
+    ]
   },
   "include": [
-    "src/**/*.ts"                                      /* Include all .ts files within the src directory and its subdirectories. */
+    "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules",                                    /* Exclude the node_modules directory. */
-    "**/*.spec.ts",                                    /* Exclude test files (optional, adjust pattern as needed). */
-    "drizzle"                                          /* Exclude the drizzle migration output directory */
+    "node_modules",
+    "**/*.spec.ts",
+    "drizzle"
   ]
 }
