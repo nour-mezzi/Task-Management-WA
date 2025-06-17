@@ -4,6 +4,7 @@ import React from 'react';
 import { useCreateTaskFormStore } from '@/store/createTaskStore';
 import { useTaskMutation } from '@/hooks/useTaskMutations';
 import { formatISO } from 'date-fns';
+import "@/styles/auth.css";
 
 export default function CreateTaskPage() {
   const {
