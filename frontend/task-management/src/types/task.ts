@@ -8,10 +8,10 @@ export interface Task {
 }
 
 export interface CreateTaskPayload {
-    title: string;
-    category: string;
-    description: string; 
-    dueDate: string | null;
+  title: string;
+  category: string;
+  description?: string;         
+  dueDate?: string | null;     
 }
 export interface UpdateTaskPayload {
     id: string; 

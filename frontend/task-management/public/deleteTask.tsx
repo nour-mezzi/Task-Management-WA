@@ -1,19 +1,25 @@
 'use client';
 
 import React from 'react';
+import { useDeleteTask } from '@/hooks/useTaskMutations';
 import { Button } from '@/components/ui/button';
-import { useTaskStore } from '@/store/taskStore';
+import { Trash2 } from 'lucide-react';
 
 interface DeleteTaskButtonProps {
   taskId: string;
+  onDeleted?: () => void;
 }
 
-const DeleteTaskButton: React.FC<DeleteTaskButtonProps> = ({ taskId }) => {
-  const deleteTask = useTaskStore((state) => state.deleteTask);
+const DeleteTaskButton: React.FC<DeleteTaskButtonProps> = ({ taskId, onDeleted }) => {
+  const deleteTaskMutation = useDeleteTask();
 
-  const handleDelete = () => {
-    console.log(`Attempting to delete task ID: ${taskId}`);
-    deleteTask(taskId);
+  const handleDelete = async () => {
+    try {
+      await deleteTaskMutation.mutateAsync(taskId);
+      if (onDeleted) onDeleted();
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
   };
 
   return (
@@ -21,8 +27,9 @@ const DeleteTaskButton: React.FC<DeleteTaskButtonProps> = ({ taskId }) => {
       variant="destructive"
       size="sm"
       onClick={handleDelete}
+      disabled={deleteTaskMutation.isPending}
     >
-      Delete
+      {deleteTaskMutation.isPending ? 'Deleting...' : <Trash2 className="w-4 h-4" />}
     </Button>
   );
 };
