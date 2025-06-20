@@ -5,6 +5,19 @@ import { useCreateTaskFormStore } from '@/store/createTaskStore';
 import { useTaskMutation } from '@/hooks/useTaskMutations';
 import { formatISO } from 'date-fns';
 import "@/styles/auth.css";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea"
 
 export default function CreateTaskPage() {
   const {
@@ -54,8 +67,15 @@ export default function CreateTaskPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
+  <div className="split-layout-card-section">
+        <Card className="w-full max-w-sm split-layout-the-card">
+          <CardHeader>
+            <CardTitle>Create new Task</CardTitle>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent>
+              
+      <Input
         type="text"
         value={taskTitle}
         onChange={(e) => setTaskTitle(e.target.value)}
@@ -63,7 +83,7 @@ export default function CreateTaskPage() {
         required
       />
 
-      <input
+      <Input
         type="text"
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
@@ -71,13 +91,13 @@ export default function CreateTaskPage() {
         required
       />
 
-      <textarea
+      <Textarea
         value={taskDescription}
         onChange={(e) => setTaskDescription(e.target.value)}
         placeholder="Description (optional)"
       />
 
-      <input
+      <Input
         type="date"
         value={dueDate ? dueDate.toISOString().split('T')[0] : ''}
         onChange={(e) => setDueDate(e.target.value ? new Date(e.target.value) : null)}
@@ -85,15 +105,23 @@ export default function CreateTaskPage() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? 'Saving...' : 'Create Task'}
-      </button>
+      
 
       {mutation.error && (
         <p style={{ color: 'red' }}>
           {mutation.error.message || 'An error occurred'}
         </p>
       )}
-    </form>
+            </CardContent>
+
+            <CardFooter className="flex-col gap-2">
+              <Button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Saving...' : 'Create Task'}
+      </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    
   );
 }

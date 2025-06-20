@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+        "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "target": "es2017",
     "lib": ["es2017"],
-    "esModuleInterop": true,
+    
     "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -17,10 +19,9 @@
     "alwaysStrict": true,
     "outDir": "./dist",
     "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
+    
     "skipLibCheck": true,
 
-    /* Added: Explicitly tell TypeScript where to look for types */
     "typeRoots": [
       "./node_modules/@types"
     ]

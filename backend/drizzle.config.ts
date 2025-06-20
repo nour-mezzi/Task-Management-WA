@@ -1,9 +1,9 @@
 // /home/user/Task-Management-WA/backend/drizzle.config.ts
 import 'dotenv/config';
-import { defineConfig } from 'drizzle-orm/define-config';
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './src/db/schema.ts',
+  schema: './bd/schema.ts',
   out: './drizzle',
   driver: 'pg', 
   dbCredentials: { 

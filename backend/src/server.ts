@@ -1,5 +1,6 @@
 import express from 'express';
 import taskRoutes from './routes/task.routes';
+import authRoutes from './routes/auth.routes';
 import { logger } from './middleware/logger';
 import { setupSwagger } from './swagger/swagger';
 
@@ -14,10 +15,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/tasks', taskRoutes);
-
+app.use('/api/auth', authRoutes); 
 setupSwagger(app);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
-
