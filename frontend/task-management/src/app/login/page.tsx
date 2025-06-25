@@ -66,7 +66,7 @@ const LoginPage: React.FC = () => {
               Enter your email and password below to login to your account
             </CardDescription>
             <CardAction>
-              <Link href="/signup" legacyBehavior>
+              <Link href="/signup" >
                 <Button variant="link">Sign Up</Button>
               </Link>
             </CardAction>
