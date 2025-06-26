@@ -24,7 +24,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import '@/styles/auth.css';
 
-import { useEditTaskFormStore } from '@/store/editTaskStore';
+import { useEditTaskFormStore } from '@/stores/editTaskStore';
 import { Task } from '@/types/task';
 import { useEditTaskMutation } from '@/hooks/useTaskMutations';
 import { UpdateTaskPayload } from '@/types/task';

@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardAction,
@@ -10,18 +11,18 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import "@/styles/auth.css";
-
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { z } from 'zod';
 
+import { useAuthStore } from '@/stores/userStore';
+import '@/styles/auth.css';
+
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const LoginPage: React.FC = () => {
@@ -29,20 +30,43 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const setToken = useAuthStore((state) => state.setToken);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
     const result = loginSchema.safeParse({ email, password });
 
     if (!result.success) {
-      const firstError = result.error.issues[0]?.message || "Invalid input";
-      setFormError(firstError);
+      setFormError(result.error.issues[0]?.message || 'Invalid input');
       return;
     }
 
-    // TODO: Replace this with your real login API call
-    console.log('Attempting Login:', { email, password });
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        setFormError(errorData.message || 'Login failed');
+        return;
+      }
+
+      const data = await res.json();
+
+      // Save JWT token to Zustand + localStorage
+      setToken(data.token);
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (error) {
+      setFormError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -66,7 +90,7 @@ const LoginPage: React.FC = () => {
               Enter your email and password below to login to your account
             </CardDescription>
             <CardAction>
-              <Link href="/signup" >
+              <Link href="/signup">
                 <Button variant="link">Sign Up</Button>
               </Link>
             </CardAction>
