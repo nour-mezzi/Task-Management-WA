@@ -1,48 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
-type User = {
-  id: string;
-  email: string;
-  password: string; // In real apps, hashed password!
-};
-
-// Dummy users DB — replace with your real DB lookup!
-const users: User[] = [
-  {
-    id: '1',
-    email: 'user@example.com',
-    password: 'password123', // NEVER store plaintext passwords in production!
-  },
-];
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
 
-    // Basic validation
-    if (!email || !password) {
-      return NextResponse.json({ message: 'Email and password required' }, { status: 400 });
-    }
+    const backendRes = await fetch('http://localhost:3001/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
-    // Find user
-    const user = users.find((u) => u.email === email);
-    if (!user || user.password !== password) {
-      return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
-    }
+    const data = await backendRes.json();
 
-    // Generate JWT
-    const token = jwt.sign(
-      { sub: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    return NextResponse.json({ token });
+    return NextResponse.json(data, { status: backendRes.status });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Frontend login route error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

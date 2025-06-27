@@ -45,24 +45,26 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      const res = await fetch('/api/login', {
+      // Make sure the URL matches your backend route for login
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
+        // Attempt to parse backend error message
+        const errorData = await res.json().catch(() => ({}));
         setFormError(errorData.message || 'Login failed');
         return;
       }
 
       const data = await res.json();
 
-      // Save JWT token to Zustand + localStorage
+      // Save JWT token to Zustand + localStorage or other state management
       setToken(data.token);
 
-      // Redirect to dashboard
+      // Redirect to dashboard after successful login
       router.push('/dashboard');
     } catch (error) {
       setFormError('An unexpected error occurred. Please try again.');

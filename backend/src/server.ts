@@ -1,10 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import taskRoutes from './routes/task.routes';
 import authRoutes from './routes/auth.routes';
 import { logger } from './middleware/logger';
 import { authenticateJWT } from './middleware/auth'; // <-- add this
 import { setupSwagger } from './swagger/swagger';
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 

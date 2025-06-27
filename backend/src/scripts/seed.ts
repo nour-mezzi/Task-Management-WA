@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { db } from '../../bd/index';
 import { usersTable, categoriesTable, tasksTable } from '../../bd/schema';
 import bcrypt from 'bcrypt';

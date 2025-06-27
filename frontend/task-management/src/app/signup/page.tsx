@@ -2,70 +2,68 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { signupUser } from '@/lib/auth';
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
+  Card, CardAction, CardContent, CardDescription,
+  CardFooter, CardHeader, CardTitle
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { z } from 'zod';
 
 import "@/styles/auth.css";
 
-// Schema definition using Zod
-const signUpSchema = z
-  .object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    repeatPassword: z.string().min(6, "Repeat password is required"),
-  })
-  .refine((data) => data.password === data.repeatPassword, {
-    message: "Passwords do not match",
-    path: ["repeatPassword"],
-  });
+// Validation schema
+const signUpSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  repeatPassword: z.string().min(6, "Repeat password is required"),
+}).refine((data) => data.password === data.repeatPassword, {
+  message: "Passwords do not match",
+  path: ["repeatPassword"],
+});
 
 const SignUpPage: React.FC = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [repeatPassword, setRepeatPassword] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formError, setFormError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    repeatPassword: '',
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
-    const result = signUpSchema.safeParse({
-      firstName,
-      lastName,
-      email,
-      password,
-      repeatPassword,
-    });
-
+    const result = signUpSchema.safeParse(form);
     if (!result.success) {
-      const firstIssue = result.error.issues[0]?.message || "Invalid input";
-      setFormError(firstIssue);
+      const firstError = result.error.issues[0]?.message || "Invalid input";
+      setFormError(firstError);
       return;
     }
 
-    console.log('Attempting Sign Up:', {
-      firstName,
-      lastName,
-      email,
-      password,
-    });
-
-    // TODO: Call your sign-up API here
+    try {
+      await signupUser(
+        `${form.firstName} ${form.lastName}`,
+        form.email,
+        form.password
+      );
+      router.push('/dashboard');
+    } catch (error: any) {
+      setFormError(error.message);
+    }
   };
 
   return (
@@ -76,7 +74,7 @@ const SignUpPage: React.FC = () => {
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>Create an account</CardDescription>
             <CardAction>
-              <Link href="/login" legacyBehavior>
+              <Link href="/login">
                 <Button variant="link">Login</Button>
               </Link>
             </CardAction>
@@ -90,24 +88,22 @@ const SignUpPage: React.FC = () => {
               )}
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="first-name">First Name</Label>
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
-                    id="first-name"
-                    type="text"
-                    placeholder="first name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    id="firstName"
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="last-name">Last Name</Label>
+                  <Label htmlFor="lastName">Last Name</Label>
                   <Input
-                    id="last-name"
-                    type="text"
-                    placeholder="last name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    id="lastName"
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -115,10 +111,10 @@ const SignUpPage: React.FC = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    placeholder="m@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={form.email}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -126,39 +122,36 @@ const SignUpPage: React.FC = () => {
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
-                    placeholder="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={form.password}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="re-password">Repeat Password</Label>
+                  <Label htmlFor="repeatPassword">Repeat Password</Label>
                   <Input
-                    id="re-password"
+                    id="repeatPassword"
+                    name="repeatPassword"
                     type="password"
-                    placeholder="repeat password"
-                    value={repeatPassword}
-                    onChange={(e) => setRepeatPassword(e.target.value)}
+                    value={form.repeatPassword}
+                    onChange={handleChange}
                     required
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-2">
-              <Button type="submit" className="w-full">
-                Sign up
-              </Button>
+              <Button type="submit" className="w-full">Sign up</Button>
             </CardFooter>
           </form>
         </Card>
       </div>
-
       <div className="split-layout-image-section">
         <img
           src="/23236.jpg"
-          alt="Your Background Image"
+          alt="Background"
           className="split-layout-background-image"
         />
         <div className="split-layout-image-text">
